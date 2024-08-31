@@ -1,17 +1,20 @@
-// utils/redis.js
-
-import { createClient } from 'redis';
+import redis from 'redis';
 
 class RedisClient {
   constructor() {
-    this.client = createClient();
+    this.client = redis.createClient({
+      host: 'localhost',  // Change this if Redis is on a different host
+      port: 6379          // Change this if Redis is on a different port
+    });
 
+    // Handle connection errors
     this.client.on('error', (err) => {
-      console.error('Redis client error:', err);
+      console.error('Redis error: ', err);
     });
   }
 
   isAlive() {
+    // Check if the Redis client is connected
     return this.client.connected;
   }
 
@@ -19,10 +22,9 @@ class RedisClient {
     return new Promise((resolve, reject) => {
       this.client.get(key, (err, value) => {
         if (err) {
-          reject(err);
-        } else {
-          resolve(value);
+          return reject(err);
         }
+        resolve(value);
       });
     });
   }
@@ -31,10 +33,9 @@ class RedisClient {
     return new Promise((resolve, reject) => {
       this.client.setex(key, duration, value, (err) => {
         if (err) {
-          reject(err);
-        } else {
-          resolve(true);
+          return reject(err);
         }
+        resolve();
       });
     });
   }
@@ -43,14 +44,14 @@ class RedisClient {
     return new Promise((resolve, reject) => {
       this.client.del(key, (err) => {
         if (err) {
-          reject(err);
-        } else {
-          resolve(true);
+          return reject(err);
         }
+        resolve();
       });
     });
   }
 }
 
+// Export an instance of RedisClient
 const redisClient = new RedisClient();
 export default redisClient;
