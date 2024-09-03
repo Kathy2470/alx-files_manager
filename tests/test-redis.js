@@ -1,38 +1,40 @@
-// test-redis.js
 import redis from 'redis';
+import { expect } from 'chai';
 
-// Create a new Redis client
-const client = redis.createClient({
-  host: 'localhost', // Replace with your Redis host if different
-  port: 6379, // Replace with your Redis port if different
-});
+describe('Redis Client', () => {
+  let client;
 
-// Handle errors
-client.on('error', (err) => {
-  console.error('Redis error:', err);
-});
+  before((done) => {
+    client = redis.createClient({
+      host: 'localhost',
+      port: 6379,
+    });
 
-// Handle successful connection
-client.on('connect', () => {
-  console.log('Connected to Redis');
+    client.on('error', (err) => {
+      done(err); // If there's an error, fail the test
+    });
 
-  // Test the connection by setting and getting a key
-  client.set('testKey', 'testValue', (err) => {
-    if (err) {
-      console.error('Set error:', err);
-    } else {
-      console.log('Key set successfully');
+    client.on('connect', () => {
+      done(); // Connection successful, proceed with tests
+    });
+  });
+
+  after((done) => {
+    client.quit();
+    done();
+  });
+
+  it('should set and get a key successfully', (done) => {
+    client.set('testKey', 'testValue', (err) => {
+      if (err) done(err);
 
       client.get('testKey', (err, value) => {
-        if (err) {
-          console.error('Get error:', err);
-        } else {
-          console.log('Retrieved value:', value);
-        }
+        if (err) done(err);
 
-        // Clean up and close the connection
-        client.quit();
+        expect(value).to.equal('testValue');
+        done();
       });
-    }
+    });
   });
 });
+
