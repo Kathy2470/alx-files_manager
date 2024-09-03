@@ -3,8 +3,8 @@ import redis from 'redis';
 class RedisClient {
   constructor() {
     this.client = redis.createClient({
-      host: 'localhost',  // Change this if Redis is on a different host
-      port: 6379          // Change this if Redis is on a different port
+      host: 'localhost', // Change this if Redis is on a different host
+      port: 6379, // Change this if Redis is on a different port
     });
 
     // Handle connection errors
@@ -22,9 +22,10 @@ class RedisClient {
     return new Promise((resolve, reject) => {
       this.client.get(key, (err, value) => {
         if (err) {
-          return reject(err);
+          reject(err);
+        } else {
+          resolve(value);
         }
-        resolve(value);
       });
     });
   }
@@ -33,9 +34,10 @@ class RedisClient {
     return new Promise((resolve, reject) => {
       this.client.setex(key, duration, value, (err) => {
         if (err) {
-          return reject(err);
+          reject(err);
+        } else {
+          resolve();
         }
-        resolve();
       });
     });
   }
@@ -44,9 +46,10 @@ class RedisClient {
     return new Promise((resolve, reject) => {
       this.client.del(key, (err) => {
         if (err) {
-          return reject(err);
+          reject(err);
+        } else {
+          resolve();
         }
-        resolve();
       });
     });
   }

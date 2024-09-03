@@ -3,8 +3,8 @@ import redis from 'redis';
 
 // Create a new Redis client
 const client = redis.createClient({
-  host: 'localhost',  // Replace with your Redis host if different
-  port: 6379          // Replace with your Redis port if different
+  host: 'localhost', // Replace with your Redis host if different
+  port: 6379, // Replace with your Redis port if different
 });
 
 // Handle errors
@@ -15,7 +15,7 @@ client.on('error', (err) => {
 // Handle successful connection
 client.on('connect', () => {
   console.log('Connected to Redis');
-  
+
   // Test the connection by setting and getting a key
   client.set('testKey', 'testValue', (err) => {
     if (err) {
@@ -29,7 +29,7 @@ client.on('connect', () => {
         } else {
           console.log('Retrieved value:', value);
         }
-        
+
         // Clean up and close the connection
         client.quit();
       });
