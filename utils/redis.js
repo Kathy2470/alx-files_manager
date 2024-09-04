@@ -1,60 +1,11 @@
 import redis from 'redis';
 
-class RedisClient {
-  constructor() {
-    this.client = redis.createClient({
-      host: 'localhost', // Change this if Redis is on a different host
-      port: 6379, // Change this if Redis is on a different port
-    });
+const redisClient = redis.createClient({
+  url: 'redis://localhost:6379', // Adjust as needed
+});
 
-    // Handle connection errors
-    this.client.on('error', (err) => {
-      console.error('Redis error: ', err);
-    });
-  }
+redisClient.on('error', (err) => {
+  console.error('Redis error:', err);
+});
 
-  isAlive() {
-    // Check if the Redis client is connected
-    return this.client.connected;
-  }
-
-  async get(key) {
-    return new Promise((resolve, reject) => {
-      this.client.get(key, (err, value) => {
-        if (err) {
-          reject(err);
-        } else {
-          resolve(value);
-        }
-      });
-    });
-  }
-
-  async set(key, value, duration) {
-    return new Promise((resolve, reject) => {
-      this.client.setex(key, duration, value, (err) => {
-        if (err) {
-          reject(err);
-        } else {
-          resolve();
-        }
-      });
-    });
-  }
-
-  async del(key) {
-    return new Promise((resolve, reject) => {
-      this.client.del(key, (err) => {
-        if (err) {
-          reject(err);
-        } else {
-          resolve();
-        }
-      });
-    });
-  }
-}
-
-// Export an instance of RedisClient
-const redisClient = new RedisClient();
 export default redisClient;

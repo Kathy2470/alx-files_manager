@@ -1,30 +1,15 @@
 import express from 'express';
-import controllerRouting from './routes/index';
-
-/**
- * This project is a summary of back-end concepts:
- * authentication, NodeJS, MongoDB, Redis,
- * pagination and background processing.
- *
- * The objective was to build a simple platform to upload and view files:
- *
- * User authentication via a token
- * List all files
- * Upload a new file
- * Change permission of a file
- * View a file
- * Generate thumbnails for images
- */
+import bodyParser from 'body-parser';
+import controllerRouting from './routes/index.js';
 
 const app = express();
-const port = process.env.PORT || 5000;
+const port = 3000;
 
 app.use(express.json());
 
+// Set up routing
 controllerRouting(app);
 
 app.listen(port, () => {
-  console.log(`Server running on port ${port}`);
+  console.log(`Server running at http://localhost:${port}`);
 });
-
-export default app;
