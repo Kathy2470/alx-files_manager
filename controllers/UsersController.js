@@ -1,4 +1,5 @@
-import { ObjectId } from 'mongodb';
+import pkg from 'mongodb';
+const { ObjectId } = pkg;
 import sha1 from 'sha1';
 import Queue from 'bull';
 import dbClient from '../utils/db.js';
