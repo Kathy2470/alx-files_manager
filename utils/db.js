@@ -1,5 +1,6 @@
 // utils/db.js
 import pkg from 'mongodb'; // Import the entire module
+
 const { MongoClient } = pkg; // Destructure the named export
 
 const host = process.env.DB_HOST || 'localhost';
