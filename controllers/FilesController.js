@@ -1,11 +1,14 @@
 // import pkg from 'mongodb';
-// const { ObjectId } = pkg;
 // import mime from 'mime-types';
+// import fs from 'fs';
+// import path from 'path';
+// import { v4 as uuidv4 } from 'uuid';
 // import Queue from 'bull';
-// import userUtils from '../utils/user';
-// import fileUtils from '../utils/file';
-// import basicUtils from '../utils/basic';
+// import userUtils from '../utils/user.js';
+// import fileUtils from '../utils/file.js';
+// import basicUtils from '../utils/basic.js';
 
+// const { ObjectId } = pkg;
 // const FOLDER_PATH = process.env.FOLDER_PATH || '/tmp/files_manager';
 // const fileQueue = new Queue('fileQueue');
 
@@ -25,14 +28,37 @@
 //         return response.status(400).json({ error: 'Parent not found' });
 //       }
 
-//       const { error, code, newFile } = await fileUtils.saveFile(userId, fileParams, FOLDER_PATH);
-//       if (error) {
-//         if (fileParams.type === 'image') await fileQueue.add({ userId });
-//         return response.status(code).json({ error });
+//       if (fileParams.parentId !== 0) {
+//         const parent = await fileUtils.getFile({ _id: ObjectId(fileParams.parentId) });
+//         if (!parent || parent.type !== 'folder') {
+//           return response.status(400).json({ error: 'Parent is not a folder' });
+//         }
 //       }
 
-//       if (fileParams.type === 'image') {
-//         await fileQueue.add({ fileId: newFile.id.toString(), userId: newFile.userId.toString() });
+//       const { name, type, data } = fileParams;
+//       if (!name) return response.status(400).json({ error: 'Missing name' });
+//       if (!type || !['file', 'folder', 'image'].includes(type)) {
+//         return response.status(400).json({ error: 'Missing type' });
+//       }
+
+//       let newFile;
+//       if (type === 'folder') {
+//         newFile = await fileUtils.saveFolder(userId, fileParams);
+//         return response.status(201).json(newFile);
+//       }
+
+//       if (!data) return response.status(400).json({ error: 'Missing data' });
+
+//       const fileUUID = uuidv4();
+//       const filePath = path.join(FOLDER_PATH, fileUUID);
+//       const fileContent = Buffer.from(data, 'base64');
+
+//       fs.mkdirSync(FOLDER_PATH, { recursive: true });
+//       fs.writeFileSync(filePath, fileContent);
+
+//       newFile = await fileUtils.saveFile(userId, fileParams, filePath);
+//       if (type === 'image') {
+//         await fileQueue.add({ fileId: newFile._id.toString(), userId: userId.toString() });
 //       }
 
 //       return response.status(201).json(newFile);
@@ -157,16 +183,16 @@
 
 
 import pkg from 'mongodb';
+const { ObjectId } = pkg;
 import mime from 'mime-types';
+import Queue from 'bull';
 import fs from 'fs';
 import path from 'path';
 import { v4 as uuidv4 } from 'uuid';
-import Queue from 'bull';
 import userUtils from '../utils/user.js';
 import fileUtils from '../utils/file.js';
 import basicUtils from '../utils/basic.js';
 
-const { ObjectId } = pkg;
 const FOLDER_PATH = process.env.FOLDER_PATH || '/tmp/files_manager';
 const fileQueue = new Queue('fileQueue');
 
@@ -179,47 +205,32 @@ class FilesController {
       const user = await userUtils.getUser({ _id: ObjectId(userId) });
       if (!user) return response.status(401).json({ error: 'Unauthorized' });
 
-      const { error: validationError, fileParams } = await fileUtils.validateBody(request);
-      if (validationError) return response.status(400).json({ error: validationError });
+      const { name, type, data, parentId = 0, isPublic = false } = request.body;
 
-      if (fileParams.parentId !== 0 && !basicUtils.isValidId(fileParams.parentId)) {
-        return response.status(400).json({ error: 'Parent not found' });
-      }
-
-      if (fileParams.parentId !== 0) {
-        const parent = await fileUtils.getFile({ _id: ObjectId(fileParams.parentId) });
-        if (!parent || parent.type !== 'folder') {
-          return response.status(400).json({ error: 'Parent is not a folder' });
-        }
-      }
-
-      const { name, type, data } = fileParams;
       if (!name) return response.status(400).json({ error: 'Missing name' });
-      if (!type || !['file', 'folder', 'image'].includes(type)) {
-        return response.status(400).json({ error: 'Missing type' });
+      if (!type || !['folder', 'file', 'image'].includes(type)) return response.status(400).json({ error: 'Missing or invalid type' });
+      if (type !== 'folder' && !data) return response.status(400).json({ error: 'Missing data' });
+
+      if (parentId !== 0) {
+        const parent = await fileUtils.getFile({ _id: ObjectId(parentId) });
+        if (!parent) return response.status(400).json({ error: 'Parent not found' });
+        if (parent.type !== 'folder') return response.status(400).json({ error: 'Parent is not a folder' });
       }
 
-      let newFile;
       if (type === 'folder') {
-        newFile = await fileUtils.saveFolder(userId, fileParams);
+        const newFolder = await fileUtils.saveFile(userId, { name, type, parentId, isPublic }, FOLDER_PATH);
+        return response.status(201).json(newFolder);
+      } else {
+        if (!fs.existsSync(FOLDER_PATH)) {
+          fs.mkdirSync(FOLDER_PATH, { recursive: true });
+        }
+
+        const filePath = path.join(FOLDER_PATH, uuidv4());
+        fs.writeFileSync(filePath, Buffer.from(data, 'base64'));
+
+        const newFile = await fileUtils.saveFile(userId, { name, type, parentId, isPublic, localPath: filePath });
         return response.status(201).json(newFile);
       }
-
-      if (!data) return response.status(400).json({ error: 'Missing data' });
-
-      const fileUUID = uuidv4();
-      const filePath = path.join(FOLDER_PATH, fileUUID);
-      const fileContent = Buffer.from(data, 'base64');
-
-      fs.mkdirSync(FOLDER_PATH, { recursive: true });
-      fs.writeFileSync(filePath, fileContent);
-
-      newFile = await fileUtils.saveFile(userId, fileParams, filePath);
-      if (type === 'image') {
-        await fileQueue.add({ fileId: newFile._id.toString(), userId: userId.toString() });
-      }
-
-      return response.status(201).json(newFile);
     } catch (err) {
       console.error('Error in postUpload:', err);
       return response.status(500).json({ error: 'Internal Server Error' });
