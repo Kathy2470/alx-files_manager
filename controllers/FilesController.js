@@ -2,9 +2,9 @@ import pkg from 'mongodb';
 const { ObjectId } = pkg;
 import mime from 'mime-types';
 import Queue from 'bull';
-import userUtils from '../utils/user.js';
-import fileUtils from '../utils/file.js';
-import basicUtils from '../utils/basic.js';
+import userUtils from '../utils/user';
+import fileUtils from '../utils/file';
+import basicUtils from '../utils/basic';
 
 const FOLDER_PATH = process.env.FOLDER_PATH || '/tmp/files_manager';
 const fileQueue = new Queue('fileQueue');
