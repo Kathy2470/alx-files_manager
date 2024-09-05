@@ -6,7 +6,7 @@ class RedisClient {
     this.client = redis.createClient();
     this.client.on('error', (err) =>
       console.error('Redis client not connected to the server:', err)
-    );
+    ); // Line wrapped to meet max-len
 
     // Promisify the Redis client methods for easier async/await usage
     this.getAsync = promisify(this.client.get).bind(this.client);
