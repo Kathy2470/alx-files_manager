@@ -4,9 +4,7 @@ import { promisify } from 'util';
 class RedisClient {
   constructor() {
     this.client = redis.createClient();
-    this.client.on('error', (err) =>
-      console.error('Redis client not connected to the server:', err)
-    ); // Line wrapped to meet max-len
+    this.client.on('error', (err) => console.error('Redis client not connected to the server:', err));
 
     // Promisify the Redis client methods for easier async/await usage
     this.getAsync = promisify(this.client.get).bind(this.client);
@@ -30,7 +28,7 @@ class RedisClient {
 
   async set(key, value, duration) {
     try {
-      await this.setAsync(key, value, 'EX', duration); // 'EX' sets expiration in seconds
+      await this.setAsync(key, value, 'EX', duration); // 'EX' sets the expiration in seconds
     } catch (err) {
       console.error('Error setting value in Redis:', err);
     }
