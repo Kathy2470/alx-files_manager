@@ -1,5 +1,5 @@
-import redisClient from './redis.js';
-import dbClient from './db.js';
+import redisClient from './redis';
+import dbClient from './db';
 
 /**
  * Module with user utilities
