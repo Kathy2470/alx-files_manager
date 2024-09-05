@@ -1,5 +1,7 @@
 import express from 'express';
+
 import bodyParser from 'body-parser';
+
 import controllerRouting from './routes/index.js';
 
 const app = express();
