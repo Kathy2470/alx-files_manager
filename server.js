@@ -1,8 +1,5 @@
 import express from 'express';
-
-import bodyParser from 'body-parser';
-
-import controllerRouting from './routes/index.js';
+import controllerRouting from './routes/index';
 
 const app = express();
 const port = 5000;
