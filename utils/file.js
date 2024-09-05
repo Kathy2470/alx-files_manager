@@ -2,9 +2,9 @@ import pkg from 'mongodb';
 const { ObjectId } = pkg;
 import { v4 as uuidv4 } from 'uuid';
 import { promises as fsPromises } from 'fs';
-import dbClient from './db.js';
-import userUtils from './user.js';
-import basicUtils from './basic.js';
+import dbClient from './db';
+import userUtils from './user';
+import basicUtils from './basic';
 
 /**
  * Module with file utilities
